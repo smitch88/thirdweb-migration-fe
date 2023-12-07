@@ -6,13 +6,14 @@ import React, { useState } from "react";
 import { Field, Form, Formik, FormikProps } from "formik";
 import styles from "../styles/Home.module.css";
 import { goerli, mainnet } from "wagmi/chains";
+import { erc721ABI, useAccount, useChainId, useContractReads } from "wagmi";
 import {
-  erc721ABI,
-  useAccount,
-  useChainId,
-  useContractRead,
-  useContractReads,
-} from "wagmi";
+  prepareWriteContract,
+  waitForTransaction,
+  writeContract,
+} from "@wagmi/core";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const baseContract = {
   [goerli.id]: {
@@ -559,10 +560,6 @@ const Home: NextPage = () => {
     ],
   });
 
-  console.log({
-    data,
-  });
-
   const [name, symbol, totalSupply, baseURI] = data || [];
 
   return (
@@ -598,11 +595,47 @@ const Home: NextPage = () => {
                 symbol: symbol?.result,
                 baseUri: baseURI?.result,
               }}
-              onSubmit={(values, actions) => {
-                setTimeout(() => {
-                  alert(JSON.stringify(values, null, 2));
-                  actions.setSubmitting(false);
-                }, 1000);
+              onSubmit={async (values, actions) => {
+                const toastId = toast("Check wallet for transaction...", {
+                  autoClose: false,
+                });
+
+                const { request } = await prepareWriteContract({
+                  ...factoryContract?.[chainId],
+                  functionName: "deployContract",
+                  enabled: name && symbol,
+                  args: [
+                    values?.implementationContract,
+                    values?.admin,
+                    values?.asset,
+                    values?.royaltyRecipient.values?.royaltyRate * 100,
+                    "% to bps basis",
+                    values?.supply,
+                    values?.name,
+                    values?.symbol,
+                    values?.baseUri,
+                  ],
+                });
+
+                const { hash } = await writeContract(request);
+
+                toast.update(toastId, {
+                  type: toast.TYPE.INFO,
+                  render: `Processing tx...${hash?.slice(0, 6)}`,
+                  autoClose: 5000,
+                });
+
+                const data = await waitForTransaction({
+                  hash,
+                });
+
+                console.log(data);
+
+                toast.update(toastId, {
+                  type: toast.TYPE.SUCCESS,
+                  render: `Successfully migrated contract.`,
+                  autoClose: 5000,
+                });
               }}
               enableReinitialize
             >
@@ -691,6 +724,7 @@ const Home: NextPage = () => {
         </a>
         <span>© Pop Punk LLC. All rights reserved</span>
       </footer>
+      <ToastContainer />
     </div>
   );
 };
