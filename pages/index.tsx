@@ -597,12 +597,12 @@ const Home: NextPage = () => {
       <main className={styles.main}>
         <ConnectButton />
 
+        <div className="flex flex-row items-center">
+          <span className="text-3xl font-bold my-8">💩web migration</span>
+        </div>
+
         {address ? (
           <>
-            <div className="flex flex-row items-center">
-              <span className="text-3xl font-bold my-8">💩web migration</span>
-            </div>
-
             <div className="flex flex-col my-4 w-full max-w-2xl mx-auto">
               <h2 className="font-bold mb-1">Old Contract Address</h2>
               <input
@@ -827,7 +827,9 @@ const Home: NextPage = () => {
             </div>
           </>
         ) : (
-          <p>Please connect wallet to begin!</p>
+          <p className="my-4">
+            Please <u>connect wallet</u> to begin migration
+          </p>
         )}
       </main>
 
