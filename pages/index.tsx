@@ -3,10 +3,10 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import clsx from "clsx";
 import React, { useState } from "react";
-import { Field, Form, Formik, FormikProps } from "formik";
+import { Field, Form, Formik, FormikProps, ErrorMessage } from "formik";
 import styles from "../styles/Home.module.css";
 import { goerli, mainnet } from "wagmi/chains";
-import { erc721ABI, useAccount, useChainId, useContractReads } from "wagmi";
+import { erc721ABI, useAccount, useNetwork, useContractReads } from "wagmi";
 import {
   prepareWriteContract,
   waitForTransaction,
@@ -17,7 +17,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const baseContract = {
   [goerli.id]: {
-    address: "0xDC2998c2F22f4f584945EF27107a6c56FfeF1DC5",
+    address: "0xF1736E762F7f58D518693E1CdE5111Bbf626dDb3",
     abi: [
       { inputs: [], stateMutability: "nonpayable", type: "constructor" },
       { inputs: [], name: "ETHER_NO_BALANCE", type: "error" },
@@ -223,6 +223,16 @@ const baseContract = {
           { internalType: "address", name: "approved", type: "address" },
         ],
         stateMutability: "view",
+        type: "function",
+      },
+      {
+        inputs: [
+          { internalType: "uint256", name: "fromTokenId_", type: "uint256" },
+          { internalType: "uint256", name: "toTokenId_", type: "uint256" },
+        ],
+        name: "indexTokens",
+        outputs: [],
+        stateMutability: "nonpayable",
         type: "function",
       },
       {
@@ -451,7 +461,7 @@ const baseContract = {
 
 const factoryContract = {
   [goerli.id]: {
-    address: "0x36d27fD66160395E52F579F60252bd108f4B8546",
+    address: "0xC535B94088df301288747d630AF8a346D2f5390D",
     abi: [
       {
         inputs: [
@@ -493,23 +503,14 @@ const factoryContract = {
   },
 };
 
-/*
- address implementationContract_,
-    address admin_,
-    address asset_,
-    address royaltyRecipient_,
-    uint96 royaltyRate_,
-    uint256 supply_,
-    string memory name_,
-    string memory symbol_,
-    string memory baseUri_
- */
-
-const InputField = ({ field, form, label, ...props }) => {
+const InputField = ({ field, form, label, required, ...props }) => {
   return (
     <div className="flex flex-row w-full">
       <label htmlFor={field.name} className="flex flex-col w-full">
-        <span>{label}</span>
+        <strong className="uppercase font-bold text-gray text-xs">
+          {label}
+          {required && <span className="text-[#f03a17]">*</span>}
+        </strong>
         <input
           {...field}
           {...props}
@@ -520,18 +521,41 @@ const InputField = ({ field, form, label, ...props }) => {
             }
           )}
         />
+        <ErrorMessage
+          name={field?.name}
+          render={(msg) => (
+            <span className="text-[#f03a17] font-bold">{msg}</span>
+          )}
+        />
       </label>
     </div>
   );
 };
 
+const getSampleUri = (tokenUri) => {
+  const parts = tokenUri?.split("/");
+  parts?.pop();
+  return `${parts?.join("/")}/`;
+};
+
+const getExplorerUrl = ({ address, chainId }) => {
+  switch (chainId) {
+    case goerli.id:
+      return `https://goerli.etherscan.io/address/${address}`;
+    default:
+      return `https://etherscan.io/address/${address}`;
+  }
+};
 const Home: NextPage = () => {
   const [implementationContract, setImplementationContract] = useState(null);
-  const { chainId } = useChainId();
+  const [createdContract, setCreatedContract] = useState(null);
+  const { chain } = useNetwork();
   const { address } = useAccount();
+
   const onChangeImplContract = (e) => {
     const value = e.target.value;
     setImplementationContract(value);
+    setCreatedContract(null);
   };
 
   const { data, isError, isLoading } = useContractReads({
@@ -560,7 +584,7 @@ const Home: NextPage = () => {
     ],
   });
 
-  const [name, symbol, totalSupply, baseURI] = data || [];
+  const [name, symbol, totalSupply, tokenUri] = data || [];
 
   return (
     <div className={styles.container}>
@@ -582,10 +606,27 @@ const Home: NextPage = () => {
           />
         </div>
         <div className="flex flex-col w-full max-w-2xl mx-auto">
+          {createdContract && (
+            <div className="flex flex-col bg-[#91cf7b]/30 p-6 rounded-md gap-2">
+              <h2 className="text-4xl font-bold">Success!</h2>
+              <p>You migrated your old contract to the new address below.</p>
+              <a
+                className="underline"
+                href={getExplorerUrl({
+                  address: createdContract,
+                  chainId: chain?.id,
+                })}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                New address: {createdContract}
+              </a>
+            </div>
+          )}
           {implementationContract ? (
             <Formik
               initialValues={{
-                implementationContract: baseContract?.[chainId]?.address,
+                implementationContract: baseContract?.[chain?.id]?.address,
                 admin: address,
                 asset: implementationContract,
                 royaltyRecipient: address,
@@ -593,124 +634,188 @@ const Home: NextPage = () => {
                 supply: Number(totalSupply?.result),
                 name: name?.result,
                 symbol: symbol?.result,
-                baseUri: baseURI?.result,
+                baseUri: "",
+              }}
+              validateOnMount={true}
+              validate={(values) => {
+                const errors = {};
+
+                if (!values?.name) {
+                  errors.name = "Name is required";
+                }
+
+                if (!values?.admin) {
+                  errors.admin = "Admin is required";
+                }
+
+                if (!values?.asset) {
+                  errors.asset = "Base asset is required";
+                }
+
+                if (!values?.symbol) {
+                  errors.symbol = "Symbol is required";
+                }
+
+                if (!values?.baseUri) {
+                  errors.baseUri = "Base URI is required";
+                }
+
+                if (!values?.royaltyRecipient) {
+                  errors.royaltyRecipient = "Royalty Recipient is required";
+                }
+
+                return errors;
               }}
               onSubmit={async (values, actions) => {
-                const toastId = toast("Check wallet for transaction...", {
-                  autoClose: false,
-                });
+                let toastId;
 
-                const { request } = await prepareWriteContract({
-                  ...factoryContract?.[chainId],
-                  functionName: "deployContract",
-                  enabled: name && symbol,
-                  args: [
-                    values?.implementationContract,
-                    values?.admin,
-                    values?.asset,
-                    values?.royaltyRecipient.values?.royaltyRate * 100,
-                    "% to bps basis",
-                    values?.supply,
-                    values?.name,
-                    values?.symbol,
-                    values?.baseUri,
-                  ],
-                });
+                try {
+                  toastId = toast("Check wallet for transaction...", {
+                    autoClose: false,
+                  });
 
-                const { hash } = await writeContract(request);
+                  const { request } = await prepareWriteContract({
+                    ...factoryContract?.[chain?.id],
+                    functionName: "deployClone",
+                    enabled: name && symbol,
+                    args: [
+                      values?.implementationContract,
+                      values?.admin,
+                      values?.asset,
+                      values?.royaltyRecipient,
+                      (values?.royaltyRate || 0) * 100,
+                      values?.supply,
+                      values?.name,
+                      values?.symbol,
+                      values?.baseUri,
+                    ],
+                  });
 
-                toast.update(toastId, {
-                  type: toast.TYPE.INFO,
-                  render: `Processing tx...${hash?.slice(0, 6)}`,
-                  autoClose: 5000,
-                });
+                  const { hash } = await writeContract(request);
 
-                const data = await waitForTransaction({
-                  hash,
-                });
+                  toast.update(toastId, {
+                    type: toast.TYPE.INFO,
+                    render: `Processing tx...${hash?.slice(0, 6)}`,
+                    autoClose: false,
+                  });
 
-                console.log(data);
+                  const data = await waitForTransaction({
+                    hash,
+                  });
 
-                toast.update(toastId, {
-                  type: toast.TYPE.SUCCESS,
-                  render: `Successfully migrated contract.`,
-                  autoClose: 5000,
-                });
+                  const { logs } = data || {};
+
+                  toast.update(toastId, {
+                    type: toast.TYPE.SUCCESS,
+                    render: `Successfully migrated contract.`,
+                    autoClose: 5000,
+                  });
+
+                  actions?.resetForm();
+
+                  setImplementationContract(null);
+
+                  setCreatedContract(logs?.[0]?.address);
+                } catch (e) {
+                  if (toastId) {
+                    toast.update(toastId, {
+                      type: toast.TYPE.ERROR,
+                      render: e.message,
+                      autoClose: false,
+                    });
+                  } else {
+                    toast.error("Error attempting to migrate contract!");
+                  }
+                }
               }}
               enableReinitialize
             >
-              {(props: FormikProps<any>) => (
-                <Form className="flex flex-col gap-2 w-full">
-                  <h3 className="font-bold mb-1">Found Contract</h3>
-                  <p>The read-only fields found below will be migrated</p>
-                  <Field
-                    name="asset"
-                    placeholder="Asset"
-                    component={InputField}
-                    readOnly
-                  />
-                  <Field
-                    name="supply"
-                    label="Total Supply"
-                    component={InputField}
-                    readOnly
-                  />
-                  <Field
-                    name="name"
-                    label="Name"
-                    component={InputField}
-                    readOnly
-                  />
-                  <Field
-                    name="symbol"
-                    label="Symbol"
-                    component={InputField}
-                    readOnly
-                  />
-                  <Field
-                    name="baseUri"
-                    label="Base URI"
-                    component={InputField}
-                    readOnly
-                  />
+              {({ isValid, isSubmitting }: FormikProps<any>) => {
+                const sampleUri = getSampleUri(
+                  tokenUri?.result || "ipfs://<cid>/"
+                );
+                return (
+                  <Form className="flex flex-col gap-2 w-full">
+                    <h3 className="font-bold mb-1">Contract Details</h3>
+                    <p>
+                      The fields are pre-populated with the old contract. Feel
+                      free to change as needed
+                    </p>
+                    <Field
+                      name="supply"
+                      label="Total Supply"
+                      component={InputField}
+                      required
+                    />
+                    <Field
+                      name="name"
+                      label="Name"
+                      component={InputField}
+                      required
+                    />
+                    <Field
+                      name="symbol"
+                      label="Symbol"
+                      component={InputField}
+                      required
+                    />
+                    <Field
+                      name="baseUri"
+                      label="Base URI"
+                      component={InputField}
+                      placeholder={`e.g, ${sampleUri}`}
+                      required
+                    />
+                    <span>Found: {sampleUri}</span>
+                    <h3 className="font-bold mt-4 mb-1">
+                      Security & Royalties
+                    </h3>
+                    <p>
+                      Set up the admin and royalty configuration for the new
+                      migrated contract.
+                    </p>
 
-                  <h3 className="font-bold mt-4 mb-1">Contract Details</h3>
-                  <p>
-                    Set up the admin and royalty configuration for the new
-                    migrated contract.
-                  </p>
-
-                  <Field
-                    name="admin"
-                    placeholder="Enter admin address"
-                    label="Admin address"
-                    component={InputField}
-                  />
-                  <Field
-                    name="royaltyRecipient"
-                    placeholder="Enter royalty address"
-                    label="Royalty address"
-                    component={InputField}
-                  />
-                  <Field
-                    name="royaltyRate"
-                    placeholder="Enter royalty %"
-                    label="Royalty %"
-                    component={InputField}
-                  />
-
-                  <button
-                    className="border border-[2px] border-black px-4 py-2 bg-black text-white mt-4"
-                    type="submit"
-                  >
-                    Migrate
-                  </button>
-                </Form>
-              )}
+                    <Field
+                      name="admin"
+                      placeholder="Enter admin address"
+                      label="Admin address"
+                      component={InputField}
+                      required
+                    />
+                    <Field
+                      name="royaltyRecipient"
+                      placeholder="Enter royalty address"
+                      label="Royalty address"
+                      component={InputField}
+                      required
+                    />
+                    <Field
+                      name="royaltyRate"
+                      placeholder="Enter royalty %"
+                      label="Royalty %"
+                      component={InputField}
+                      min={0}
+                      max={100}
+                      step={0.01}
+                      type="number"
+                    />
+                    <button
+                      className={clsx(
+                        "border border-[2px] border-black px-4 py-2 bg-black text-white mt-4",
+                        {
+                          "opacity-50 cursor-not-allowed": !isValid,
+                        }
+                      )}
+                      type="submit"
+                      disabled={isSubmitting}
+                    >
+                      Migrate
+                    </button>
+                  </Form>
+                );
+              }}
             </Formik>
-          ) : (
-            <p>Please enter a contract address to migrate!</p>
-          )}
+          ) : null}
         </div>
       </main>
 
@@ -724,7 +829,7 @@ const Home: NextPage = () => {
         </a>
         <span>© Pop Punk LLC. All rights reserved</span>
       </footer>
-      <ToastContainer />
+      <ToastContainer position="bottom-center" />
     </div>
   );
 };
