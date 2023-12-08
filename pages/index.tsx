@@ -840,9 +840,8 @@ const Home: NextPage = () => {
           rel="noopener noreferrer"
           target="_blank"
         >
-          Made with ❤️ by your frens at gaslite
+          Made with ❤️ by your frens at OF & gaslite
         </a>
-        <span>© Pop Punk LLC. All rights reserved</span>
       </footer>
       <ToastContainer position="bottom-center" />
     </div>
