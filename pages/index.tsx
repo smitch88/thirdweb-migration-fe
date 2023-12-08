@@ -210,10 +210,10 @@ const Home: NextPage = () => {
             </div>
             <div className="flex flex-col w-full max-w-2xl mx-auto">
               {createdContract && (
-                <div className="flex flex-col bg-[#91cf7b]/30 p-6 rounded-md gap-2">
+                <div className="flex flex-col bg-[#91cf7b]/30 p-6 rounded-md gap-2 mt-4">
                   <h2 className="text-4xl font-bold">Success!</h2>
                   <p>
-                    You migrated your old contract to the new address below.
+                    You migrated your old contract to a new address shown below.
                   </p>
                   <a
                     className="underline"
@@ -226,6 +226,12 @@ const Home: NextPage = () => {
                   >
                     New address: {createdContract}
                   </a>
+                  <p>
+                    {`Don't`} forget to navigate to the contract and propagate
+                    token indexing with one or more calls to{" "}
+                    <strong>indexTokens()</strong> for the new collection to
+                    appear on marketplaces.
+                  </p>
                 </div>
               )}
               {isLoading && <span>Loading...</span>}
