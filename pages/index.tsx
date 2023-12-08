@@ -811,13 +811,14 @@ const Home: NextPage = () => {
                           className={clsx(
                             "border border-[2px] border-black px-4 py-2 bg-black text-white mt-4",
                             {
-                              "opacity-50 cursor-not-allowed": !isValid,
+                              "opacity-50 cursor-not-allowed":
+                                !isValid || isSubmitting,
                             }
                           )}
                           type="submit"
                           disabled={isSubmitting}
                         >
-                          Migrate
+                          {isSubmitting ? "Processing..." : "Migrate"}
                         </button>
                       </Form>
                     );
