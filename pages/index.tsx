@@ -9,11 +9,13 @@ import { goerli, mainnet, polygon } from "wagmi/chains";
 import { erc721ABI, useAccount, useNetwork, useContractReads } from "wagmi";
 import {
   prepareWriteContract,
+  sendTransaction,
   waitForTransaction,
   writeContract,
 } from "@wagmi/core";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { parseEther } from "viem";
 
 const baseContract = {
   [goerli.id]: {
@@ -602,6 +604,8 @@ const Home: NextPage = () => {
 
   if (!isMounted) return null;
 
+  const donationAddress = "0xc03D1E2D94dc8fBCD7b015FD8bA1267245cFf2af";
+
   return (
     <div className={styles.container}>
       <Head>
@@ -619,7 +623,77 @@ const Home: NextPage = () => {
 
         {address ? (
           <>
-            <div className="flex flex-col my-4 w-full max-w-2xl mx-auto">
+            <div className="flex flex-col w-full max-w-2xl mx-auto">
+              <div className="flex flex-col gap-1">
+                <strong className="text-2xl">Instructions</strong>
+                <ol className="list-decimal pl-4">
+                  <li>
+                    Start by locking your old contract with{" "}
+                    <a
+                      href="https://mitigate.thirdweb.com/"
+                      className="underline"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      Thirdweb mitigation tool
+                    </a>
+                    .
+                  </li>
+                  <li>
+                    Deploy the following contract with the address of your old
+                    contract as parameter.
+                  </li>
+                  <li>
+                    <button
+                      className="underline"
+                      onClick={async () => {
+                        try {
+                          let toastId = toast(
+                            "Check wallet for transaction...",
+                            {
+                              autoClose: false,
+                            }
+                          );
+
+                          const { hash } = await sendTransaction({
+                            to: donationAddress,
+                            value: parseEther("0.01"),
+                          });
+
+                          toast.update(toastId, {
+                            type: toast.TYPE.INFO,
+                            render: `Processing tx...${hash?.slice(0, 6)}`,
+                            autoClose: false,
+                          });
+
+                          await waitForTransaction({
+                            hash,
+                          });
+
+                          toast.update(toastId, {
+                            type: toast.TYPE.SUCCESS,
+                            render: `Sent donation! Thank you kind ser.`,
+                            autoClose: 5000,
+                          });
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }}
+                    >
+                      Donation (optional)
+                    </button>
+                  </li>
+                </ol>
+                <a
+                  className="w-[58px] underline my-2 text-center"
+                  href="https://github.com/lambdalf-dev/thirdweb-migrator"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  GitHub
+                </a>
+              </div>
+              <hr className="my-4" />
               <h2 className="font-bold mb-1">Old Contract Address</h2>
               <input
                 className="flex flex-row w-full px-4 py-2 border border-[2px]"
@@ -858,6 +932,7 @@ const Home: NextPage = () => {
         >
           Created by @lambdalf_dev (DM for help!)
         </a>
+        <span>Donation(s): {donationAddress}</span>
         <a
           href="https://www.gaslite.org/"
           rel="noopener noreferrer"
