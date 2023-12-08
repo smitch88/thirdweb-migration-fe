@@ -550,6 +550,8 @@ const getSampleUri = (tokenUri) => {
 
 const getExplorerUrl = ({ address, chainId }) => {
   switch (chainId) {
+    case polygon.id:
+      return `https://polygonscan.com/address/${address}`;
     case goerli.id:
       return `https://goerli.etherscan.io/address/${address}`;
     default:
