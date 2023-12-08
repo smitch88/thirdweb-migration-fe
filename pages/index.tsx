@@ -2,7 +2,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import type { NextPage } from "next";
 import Head from "next/head";
 import clsx from "clsx";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Field, Form, Formik, FormikProps, ErrorMessage } from "formik";
 import styles from "../styles/Home.module.css";
 import { goerli, mainnet } from "wagmi/chains";
@@ -547,6 +547,8 @@ const getExplorerUrl = ({ address, chainId }) => {
   }
 };
 const Home: NextPage = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
   const [implementationContract, setImplementationContract] = useState(null);
   const [createdContract, setCreatedContract] = useState(null);
   const { chain } = useNetwork();
@@ -586,6 +588,12 @@ const Home: NextPage = () => {
 
   const [name, symbol, totalSupply, tokenUri] = data || [];
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return null;
+
   return (
     <div className={styles.container}>
       <Head>
@@ -594,7 +602,7 @@ const Home: NextPage = () => {
         <link href="/favicon.ico" rel="icon" />
       </Head>
 
-      <main className={styles.main}>
+      <div className={styles.main}>
         <ConnectButton />
 
         <div className="flex flex-row items-center">
@@ -832,10 +840,16 @@ const Home: NextPage = () => {
             Please <u>connect wallet</u> to begin migration
           </p>
         )}
-      </main>
+      </div>
 
       <footer className={clsx(styles.footer, "flex-col")}>
-        <span>Created by @lambdalf_dev (https://t.me/lambdalf_dev)</span>
+        <a
+          href="https://twitter.com/Lambdalf_dev"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Created by @lambdalf_dev (DM for help!)
+        </a>
         <a
           href="https://www.gaslite.org/"
           rel="noopener noreferrer"
