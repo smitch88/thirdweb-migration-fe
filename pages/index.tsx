@@ -5,7 +5,7 @@ import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { Field, Form, Formik, FormikProps, ErrorMessage } from "formik";
 import styles from "../styles/Home.module.css";
-import { goerli, mainnet } from "wagmi/chains";
+import { goerli, mainnet, polygon } from "wagmi/chains";
 import { erc721ABI, useAccount, useNetwork, useContractReads } from "wagmi";
 import {
   prepareWriteContract,
@@ -453,6 +453,10 @@ const baseContract = {
       { stateMutability: "payable", type: "receive" },
     ],
   },
+  [polygon.id]: {
+    address: "",
+    abi: [],
+  },
   [mainnet.id]: {
     address: "",
     abi: [],
@@ -496,6 +500,10 @@ const factoryContract = {
         type: "function",
       },
     ],
+  },
+  [polygon.id]: {
+    address: "",
+    abi: [],
   },
   [mainnet.id]: {
     address: "",
