@@ -834,12 +834,13 @@ const Home: NextPage = () => {
       </main>
 
       <footer className={clsx(styles.footer, "flex-col")}>
+        <span>Created by @lambdalf_dev (https://t.me/lambdalf_dev)</span>
         <a
           href="https://www.gaslite.org/"
           rel="noopener noreferrer"
           target="_blank"
         >
-          Made with ❤️ by your frens at gaslite.gg
+          Made with ❤️ by your frens at gaslite
         </a>
         <span>© Pop Punk LLC. All rights reserved</span>
       </footer>
