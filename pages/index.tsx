@@ -190,6 +190,12 @@ const Home: NextPage = () => {
                       Donation (optional)
                     </button>
                   </li>
+                  <li>
+                    Please note that the turdweb contract can not be minted and
+                    is intended for minted out collections, please contact me so
+                    we can work a custom solution for you if your collection
+                    does not match this criteria.
+                  </li>
                 </ol>
                 <a
                   className="w-[58px] underline my-2 text-center"
