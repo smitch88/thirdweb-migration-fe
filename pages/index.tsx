@@ -5,7 +5,7 @@ import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { Field, Form, Formik, FormikProps, ErrorMessage } from "formik";
 import styles from "../styles/Home.module.css";
-import { goerli, polygon } from "wagmi/chains";
+import { goerli, polygon, optimism } from "wagmi/chains";
 import { erc721ABI, useAccount, useNetwork, useContractReads } from "wagmi";
 import {
   prepareWriteContract,
@@ -57,6 +57,8 @@ const getExplorerUrl = ({ address, chainId }) => {
   switch (chainId) {
     case polygon.id:
       return `https://polygonscan.com/address/${address}`;
+    case optimism.id:
+      return `https://optimism.etherscan.io/address/${address}`;
     case goerli.id:
       return `https://goerli.etherscan.io/address/${address}`;
     default:
@@ -114,25 +116,35 @@ const Home: NextPage = () => {
   const donationAddress = "0xc03D1E2D94dc8fBCD7b015FD8bA1267245cFf2af";
 
   return (
-    <div className={styles.container}>
+    <div className="flex flex-col w-full justify-center font-primary pb-20">
       <Head>
         <title>Thirdweb Migration</title>
         <meta content="Thirdweb Contract Migration" name="description" />
         <link href="/favicon.ico" rel="icon" />
       </Head>
 
-      <div className={styles.main}>
-        <ConnectButton />
-
+      <header className="flex flex-row items-center justify-between px-6 py-6">
         <div className="flex flex-row items-center">
-          <span className="text-3xl font-bold my-8">💩web migration</span>
+          <span className="text-3xl font-bold">💩web migration</span>
         </div>
-
+        <ConnectButton />
+      </header>
+      <div className="flex flex-col w-full p-6 items-center">
+        <h2 className="text-4xl font-bold text-left underline my-4">
+          What is this?
+        </h2>
+        <p className="max-w-2xl font-light">
+          Turdweb is a migration tool created to help you migrate your
+          vulnerable Thirdweb NFT contract without the exhorbitant fees incurred
+          by the Thirdweb migration tool. It can also be used to migrate any
+          ERC721 contract, for example, to remove the Open Sea operator
+          filterer.
+        </p>
         {address ? (
           <>
-            <div className="flex flex-col w-full max-w-2xl mx-auto">
+            <div className="flex flex-col w-full max-w-2xl mx-auto mt-8 mb-4">
               <div className="flex flex-col gap-1">
-                <strong className="text-2xl">Instructions</strong>
+                <strong className="text-2xl font-bold">{`Let's get started`}</strong>
                 <ol className="list-decimal pl-4">
                   <li>
                     Start by locking your old contract with{" "}
@@ -438,7 +450,7 @@ const Home: NextPage = () => {
             </div>
           </>
         ) : (
-          <p className="my-4">
+          <p className="mt-8 font-bold">
             Please <u>connect wallet</u> to begin migration
           </p>
         )}
@@ -454,6 +466,7 @@ const Home: NextPage = () => {
         </a>
         <span>Donation(s): {donationAddress}</span>
         <a
+          className="text-sm mt-4"
           href="https://www.gaslite.org/"
           rel="noopener noreferrer"
           target="_blank"

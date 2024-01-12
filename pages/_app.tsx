@@ -3,14 +3,14 @@ import "@rainbow-me/rainbowkit/styles.css";
 import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import type { AppProps } from "next/app";
 import { configureChains, createConfig, sepolia, WagmiConfig } from "wagmi";
-import { goerli, mainnet, polygon } from "wagmi/chains";
+import { goerli, mainnet, polygon, optimism } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [
     mainnet,
     polygon,
-    // optimism,
+    optimism,
     // arbitrum,
     // base,
     // zora,
@@ -22,7 +22,7 @@ const { chains, publicClient, webSocketPublicClient } = configureChains(
 );
 
 const { connectors } = getDefaultWallets({
-  appName: "Migration",
+  appName: "Turdweb Migration",
   projectId: "40cefd327f5c36db9eef8e0447632d98",
   chains,
 });
