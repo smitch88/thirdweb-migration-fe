@@ -58,7 +58,7 @@ const getExplorerUrl = ({ address, chainId }) => {
     case polygon.id:
       return `https://polygonscan.com/address/${address}`;
     case optimism.id:
-      return `https://optimism.etherscan.io/address/${address}`;
+      return `https://optimistic.etherscan.io/address/${address}`;
     case goerli.id:
       return `https://goerli.etherscan.io/address/${address}`;
     default:
