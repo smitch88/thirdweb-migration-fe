@@ -65,6 +65,7 @@ const getExplorerUrl = ({ address, chainId }) => {
       return `https://etherscan.io/address/${address}`;
   }
 };
+
 const Home: NextPage = () => {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -465,14 +466,7 @@ const Home: NextPage = () => {
           Created by @lambdalf_dev (DM for help!)
         </a>
         <span>Donation(s): {donationAddress}</span>
-        <a
-          className="text-sm mt-4"
-          href="https://www.gaslite.org/"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          Made with ❤️ by your frens at OF & gaslite
-        </a>
+        <span className="text-sm mt-4">Made with ❤️ by your frens at OF</span>
       </footer>
       <ToastContainer position="bottom-center" />
     </div>
