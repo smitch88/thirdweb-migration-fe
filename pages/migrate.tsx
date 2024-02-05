@@ -73,7 +73,7 @@ const Migrate: NextPage = () => {
   return (
     <div className="flex flex-col w-full justify-center font-primary pb-20">
       <Head>
-        <title>Thirdweb Migration</title>
+        <title>Shift - Migration</title>
         <meta content="Thirdweb Contract Migration" name="description" />
         <link href="/favicon.ico" rel="icon" />
       </Head>

@@ -19,7 +19,7 @@ const Home: NextPage = () => {
   return (
     <div className="flex flex-col w-full justify-center font-primary pb-20">
       <Head>
-        <title>Thirdweb Migration</title>
+        <title>Shift</title>
         <meta content="Thirdweb Contract Migration" name="description" />
         <link href="/favicon.ico" rel="icon" />
       </Head>
@@ -29,7 +29,7 @@ const Home: NextPage = () => {
           What is this?
         </h2>
         <p className="max-w-2xl font-light">
-          Turdweb is a migration tool created to help you migrate your
+          Shift is a migration tool created to help you migrate your
           vulnerable Thirdweb NFT contract without the exhorbitant fees incurred
           by the Thirdweb migration tool. It can also be used to migrate any
           ERC721 contract, for example, to remove the Open Sea operator
