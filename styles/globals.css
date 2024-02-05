@@ -20,9 +20,35 @@ body {
   background-image: linear-gradient(90deg, #74ebd5 0%, #9face6 100%);
 }
 
+main {
+  min-height: 75vh;
+}
+
 a {
   color: inherit;
   text-decoration: none;
+}
+
+a.nav-link {
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 10px 15px;
+}
+
+a.nav-link:hover {
+  border-color: #000;
+}
+
+a.btn-card {
+  border: 1px solid #000;
+  border-radius: 5px;
+  padding: 10px 15px;
+  margin-top: 30px;
+}
+
+a.btn-card:hover {
+  color: #fff;
+  background-color: #000;
 }
 
 * {
