@@ -183,14 +183,6 @@ const Wrap: NextPage = () => {
                     does not match this criteria.
                   </li>
                 </ol>
-                <a
-                  className="w-[58px] underline my-2 text-center"
-                  href="https://github.com/lambdalf-dev/thirdweb-migrator"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  GitHub
-                </a>
               </div>
               <hr className="my-4" />
               <h2 className="font-bold mb-1">Old Contract Address</h2>

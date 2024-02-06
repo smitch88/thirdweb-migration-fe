@@ -12,6 +12,14 @@ export const Footer: FC = () => {
   return (
     <footer className={clsx(styles.footer, "flex-col")}>
       <a
+        className="w-[58px] underline my-2 text-center"
+        href="https://github.com/lambdalf-dev/shift"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        GitHub
+      </a>
+      <a
         href="https://twitter.com/Lambdalf_dev"
         rel="noopener noreferrer"
         target="_blank"
