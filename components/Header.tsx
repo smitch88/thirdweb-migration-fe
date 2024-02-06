@@ -9,7 +9,7 @@ export const Header: FC = () => {
       <div className="flex flex-row items-center">
         <Link className="nav-link text-3xl font-bold" href="/"><img src="/assets/logo-sm.png" alt="Shift logo" /></Link>
         <Link className="nav-link text-3xl" href="/migrate">Migrate</Link>
-        {/*<Link className="nav-link text-3xl" href="/wrap">Wrap</Link>*/}
+        <Link className="nav-link text-3xl" href="/wrap">Wrap</Link>
       </div>
       <ConnectButton />
     </header>

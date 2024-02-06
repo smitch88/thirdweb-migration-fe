@@ -36,6 +36,7 @@ const Home: NextPage = () => {
           filterer.
         </p>
         <a className="btn-card" href="/migrate">Begin migration</a>
+        <a className="btn-card" href="/wrap">Begin wrapping</a>
       </main>
       <Footer />
     </div>

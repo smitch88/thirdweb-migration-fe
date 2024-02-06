@@ -16,13 +16,13 @@ import { parseEther, encodeFunctionData } from "viem";
 import "react-toastify/dist/ReactToastify.css";
 
 // Internal
-import { migrated721Contract, factoryContract } from "../lib/contracts";
+import { wrapped721Contract, factoryContract } from "../lib/contracts";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { InputField } from "../components/InputField";
 import { getSampleUri, getExplorerUrl, donate } from "../utils";
 
-const Migrate: NextPage = () => {
+const Wrap: NextPage = () => {
   const [isMounted, setIsMounted] = useState(false);
 
   const [implementationContract, setImplementationContract] = useState(null);
@@ -39,20 +39,12 @@ const Migrate: NextPage = () => {
   const validateInputs = (values) => {
     const errors = {};
 
-    if (!values?.name) {
-      errors.name = "Name is required";
-    }
-
     if (!values?.admin) {
       errors.admin = "Admin is required";
     }
 
     if (!values?.asset) {
       errors.asset = "Base asset is required";
-    }
-
-    if (!values?.symbol) {
-      errors.symbol = "Symbol is required";
     }
 
     if (!values?.baseUri) {
@@ -75,27 +67,24 @@ const Migrate: NextPage = () => {
       });
 
       const deployData = await encodeFunctionData({
-        abi: migrated721Contract.abi,
+        abi: wrapped721Contract.abi,
         functionName: "initialize",
         args: [
           values?.admin,
           values?.asset,
           values?.royaltyRecipient,
           (values?.royaltyRate || 0) * 100,
-          values?.supply,
-          values?.name,
-          values?.symbol,
           values?.baseUri,
         ]
       });
       const { request } = await prepareWriteContract({
         ...factoryContract,
         functionName: "deployClone",
-        enabled: name && symbol,
+        // enabled: name && symbol,
         args: [
           values?.implementationContract,
-          deployData
-        ],
+          deployData,
+        ]
       });
 
       const { hash } = await writeContract(request);
@@ -123,16 +112,14 @@ const Migrate: NextPage = () => {
       setImplementationContract(null);
 
       setCreatedContract(logs?.[0]?.address);
-    }
-    catch (e) {
+    } catch (e) {
       if (toastId) {
         toast.update(toastId, {
           type: toast.TYPE.ERROR,
           render: e.message,
           autoClose: false,
         });
-      }
-      else {
+      } else {
         toast.error("Error attempting to migrate contract!");
       }
     }
@@ -143,28 +130,13 @@ const Migrate: NextPage = () => {
       {
         address: implementationContract,
         abi: erc721ABI,
-        functionName: "name",
-      },
-      {
-        address: implementationContract,
-        abi: erc721ABI,
-        functionName: "symbol",
-      },
-      {
-        address: implementationContract,
-        abi: erc721ABI,
-        functionName: "totalSupply",
-      },
-      {
-        address: implementationContract,
-        abi: erc721ABI,
         functionName: "tokenURI",
         args: [1],
       },
     ],
   });
 
-  const [name, symbol, totalSupply, tokenUri] = data || [];
+  const [tokenUri] = data || [];
 
   useEffect(() => {
     setIsMounted(true);
@@ -186,9 +158,9 @@ const Migrate: NextPage = () => {
           What is this?
         </h2>
         <p className="max-w-2xl font-light">
-          This migration tool will help you migrate your vulnerable Thirdweb NFT contract without
-          the exhorbitant fees incurred by the Thirdweb migration tool.
+          This migration tool will help you migrate your collection to a new contract without Open Sea operator filterer.
           It can only be used with a fully minted collection as it does not contain a mint function.
+          Note that it requires NFT owners to manually wrap their tokens.
         </p>
         {address ? (
           <>
@@ -196,18 +168,6 @@ const Migrate: NextPage = () => {
               <div className="flex flex-col gap-1">
                 <strong className="text-2xl font-bold">{`Let's get started`}</strong>
                 <ol className="list-decimal pl-4">
-                  <li>
-                    Start by locking your old contract with{" "}
-                    <a
-                      href="https://mitigate.thirdweb.com/"
-                      className="underline"
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      Thirdweb mitigation tool
-                    </a>
-                    .
-                  </li>
                   <li>
                     Deploy the following contract with the address of your old
                     contract as parameter.
@@ -259,26 +219,17 @@ const Migrate: NextPage = () => {
                   >
                     New address: {createdContract}
                   </a>
-                  <p>
-                    {`Don't`} forget to navigate to the contract and propagate
-                    token indexing with one or more calls to{" "}
-                    <strong>indexTokens()</strong> for the new collection to
-                    appear on marketplaces.
-                  </p>
                 </div>
               )}
               {isLoading && <span>Loading...</span>}
               {implementationContract ? (
                 <Formik
                   initialValues={{
-                    implementationContract: migrated721Contract?.[chain?.id]?.address,
+                    implementationContract: wrapped721Contract?.[chain?.id]?.address,
                     admin: address,
                     asset: implementationContract,
                     royaltyRecipient: address,
                     royaltyRate: 5, // 5%
-                    supply: Number(totalSupply?.result),
-                    name: name?.result,
-                    symbol: symbol?.result,
                     baseUri: "",
                   }}
                   validateOnMount={true}
@@ -297,24 +248,6 @@ const Migrate: NextPage = () => {
                           The fields are pre-populated with the old contract.
                           Feel free to change as needed
                         </p>
-                        <Field
-                          name="supply"
-                          label="Total Supply"
-                          component={InputField}
-                          required
-                        />
-                        <Field
-                          name="name"
-                          label="Name"
-                          component={InputField}
-                          required
-                        />
-                        <Field
-                          name="symbol"
-                          label="Symbol"
-                          component={InputField}
-                          required
-                        />
                         <Field
                           name="baseUri"
                           label="Base URI"
@@ -366,7 +299,7 @@ const Migrate: NextPage = () => {
                           type="submit"
                           disabled={isSubmitting}
                         >
-                          {isSubmitting ? "Processing..." : "Migrate"}
+                          {isSubmitting ? "Processing..." : "Wrap"}
                         </button>
                       </Form>
                     );
@@ -388,4 +321,4 @@ const Migrate: NextPage = () => {
   );
 };
 
-export default Migrate;
+export default Wrap;
