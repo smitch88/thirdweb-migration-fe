@@ -8,7 +8,6 @@ import Head from "next/head";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { Field, Form, Formik, FormikProps, ErrorMessage } from "formik";
-import { goerli, sepolia, polygonMumbai, mainnet, polygon, optimism } from "wagmi/chains";
 import { erc721ABI, useAccount, useNetwork, useContractReads } from "wagmi";
 import { prepareWriteContract, sendTransaction, waitForTransaction, writeContract } from "@wagmi/core";
 import { ToastContainer, toast } from "react-toastify";

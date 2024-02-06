@@ -6,7 +6,7 @@ import "@rainbow-me/rainbowkit/styles.css";
 import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import type { AppProps } from "next/app";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
-import { goerli, sepolia, polygonMumbai, mainnet, polygon, optimism } from "wagmi/chains";
+import { goerli, sepolia, mainnet, polygon, optimism } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 
 // Internal
@@ -21,7 +21,7 @@ const { chains, publicClient, webSocketPublicClient } = configureChains(
     // base,
     // zora,
     ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true"
-      ? [goerli, sepolia, polygonMumbai]
+      ? [goerli, sepolia]
       : []),
   ],
   [publicProvider()]

@@ -1,5 +1,5 @@
 import { sendTransaction, waitForTransaction } from "@wagmi/core";
-import { goerli, sepolia, polygonMumbai, mainnet, polygon, optimism } from "wagmi/chains";
+import { goerli, sepolia, mainnet, polygon, optimism } from "wagmi/chains";
 import { toast } from "react-toastify";
 import { parseEther } from "viem";
 
@@ -15,8 +15,8 @@ export const getExplorerUrl = ({ address, chainId }) => {
       return `https://goerli.etherscan.io/address/${address}`;
     case sepolia.id:
       return `https://sepolia.etherscan.io/address/${address}`;
-    case polygonMumbai.id:
-      return `https://mumbai.polygonscan.com/address/${address}`;
+    // case polygonMumbai.id:
+    //   return `https://mumbai.polygonscan.com/address/${address}`;
     case polygon.id:
       return `https://polygonscan.com/address/${address}`;
     case optimism.id:
