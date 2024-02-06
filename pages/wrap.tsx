@@ -239,6 +239,7 @@ const Wrap: NextPage = () => {
                           The fields are pre-populated with the old contract.
                           Feel free to change as needed
                         </p>
+                        <p>Base URI</p>
                         <Field
                           name="baseUri"
                           label="Base URI"
@@ -255,6 +256,7 @@ const Wrap: NextPage = () => {
                           migrated contract.
                         </p>
 
+                        <p>Admin</p>
                         <Field
                           name="admin"
                           placeholder="Enter admin address"
@@ -262,6 +264,7 @@ const Wrap: NextPage = () => {
                           component={InputField}
                           required
                         />
+                        <p>Royalty recipient</p>
                         <Field
                           name="royaltyRecipient"
                           placeholder="Enter royalty address"
@@ -269,6 +272,7 @@ const Wrap: NextPage = () => {
                           component={InputField}
                           required
                         />
+                        <p>Royalty rate</p>
                         <Field
                           name="royaltyRate"
                           placeholder="Enter royalty %"

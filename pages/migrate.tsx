@@ -288,24 +288,28 @@ const Migrate: NextPage = () => {
                           The fields are pre-populated with the old contract.
                           Feel free to change as needed
                         </p>
+                        <p>Total Supply</p>
                         <Field
                           name="supply"
                           label="Total Supply"
                           component={InputField}
                           required
                         />
+                        <p>Name</p>
                         <Field
                           name="name"
                           label="Name"
                           component={InputField}
                           required
                         />
+                        <p>Symbol</p>
                         <Field
                           name="symbol"
                           label="Symbol"
                           component={InputField}
                           required
                         />
+                        <p>Base URI</p>
                         <Field
                           name="baseUri"
                           label="Base URI"
@@ -322,6 +326,7 @@ const Migrate: NextPage = () => {
                           migrated contract.
                         </p>
 
+                        <p>Admin</p>
                         <Field
                           name="admin"
                           placeholder="Enter admin address"
@@ -329,6 +334,7 @@ const Migrate: NextPage = () => {
                           component={InputField}
                           required
                         />
+                        <p>Royalty recipient</p>
                         <Field
                           name="royaltyRecipient"
                           placeholder="Enter royalty address"
@@ -336,6 +342,7 @@ const Migrate: NextPage = () => {
                           component={InputField}
                           required
                         />
+                        <p>Royalty rate</p>
                         <Field
                           name="royaltyRate"
                           placeholder="Enter royalty %"
