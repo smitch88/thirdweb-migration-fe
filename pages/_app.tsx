@@ -1,10 +1,16 @@
+// Styles
 import "../styles/globals.css";
 import "@rainbow-me/rainbowkit/styles.css";
+
+// External
 import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import type { AppProps } from "next/app";
-import { configureChains, createConfig, sepolia, WagmiConfig } from "wagmi";
-import { goerli, mainnet, polygon, optimism } from "wagmi/chains";
+import { configureChains, createConfig, WagmiConfig } from "wagmi";
+import { goerli, sepolia, mainnet, polygon, optimism } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
+
+// Internal
+import { appName, projectId } from "../utils";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [
@@ -22,13 +28,13 @@ const { chains, publicClient, webSocketPublicClient } = configureChains(
 );
 
 const { connectors } = getDefaultWallets({
-  appName: "Turdweb Migration",
-  projectId: "40cefd327f5c36db9eef8e0447632d98",
+  appName: appName,
+  projectId: projectId,
   chains,
 });
 
 const wagmiConfig = createConfig({
-  autoConnect: true,
+  autoConnect: false,
   connectors,
   publicClient,
   webSocketPublicClient,
