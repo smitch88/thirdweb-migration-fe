@@ -1,26 +1,27 @@
-import { sendTransaction, waitForTransaction } from "@wagmi/core";
-import { goerli, sepolia, mainnet, polygon, optimism } from "wagmi/chains";
+import { mainnet, polygon, optimism, goerli, sepolia, apeChain } from "viem/chains";
 import { toast } from "react-toastify";
 import { parseEther } from "viem";
+import { type Config } from "wagmi";
+import { sendTransaction, waitForTransaction } from "@wagmi/core";
 
-export const getSampleUri = (tokenUri) => {
+export const getSampleUri = (tokenUri: string | undefined) => {
   const parts = tokenUri?.split("/");
   parts?.pop();
   return `${parts?.join("/")}/`;
 };
 
-export const getExplorerUrl = ({ address, chainId }) => {
+export const getExplorerUrl = ({ address, chainId }: { address: string; chainId: number }) => {
   switch (chainId) {
     case goerli.id:
       return `https://goerli.etherscan.io/address/${address}`;
     case sepolia.id:
       return `https://sepolia.etherscan.io/address/${address}`;
-    // case polygonMumbai.id:
-    //   return `https://mumbai.polygonscan.com/address/${address}`;
     case polygon.id:
       return `https://polygonscan.com/address/${address}`;
     case optimism.id:
       return `https://optimistic.etherscan.io/address/${address}`;
+    case apeChain.id:
+      return `https://apescan.io/address/${address}`;
     default:
       return `https://etherscan.io/address/${address}`;
   }
@@ -44,6 +45,7 @@ export const donate = async () => {
     const { hash } = await sendTransaction({
       to: donationAddress,
       value: parseEther("0.01"),
+      chainId: mainnet.id,
     });
 
     toast.update(toastId, {
@@ -54,6 +56,7 @@ export const donate = async () => {
 
     await waitForTransaction({
       hash,
+      chainId: mainnet.id,
     });
 
     toast.update(toastId, {
@@ -62,6 +65,7 @@ export const donate = async () => {
       autoClose: 5000,
     });
   } catch (e) {
-    console.log(e);
+    console.error(e);
+    toast.error("Transaction failed");
   }
-}
+};

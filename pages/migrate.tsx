@@ -8,10 +8,19 @@ import Head from "next/head";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { Field, Form, Formik, FormikProps, ErrorMessage } from "formik";
-import { erc721ABI, useAccount, useNetwork, useContractReads } from "wagmi";
-import { prepareWriteContract, sendTransaction, waitForTransaction, writeContract } from "@wagmi/core";
+import { 
+  useAccount,
+  useConfig,
+  useReadContracts,
+  type Address,
+} from "wagmi";
+import { 
+  prepareWriteContract, 
+  writeContract,
+  waitForTransactionReceipt 
+} from "@wagmi/core";
 import { ToastContainer, toast } from "react-toastify";
-import { parseEther, encodeFunctionData } from "viem";
+import { parseEther, encodeFunctionData, erc721Abi } from "viem";
 import "react-toastify/dist/ReactToastify.css";
 
 // Internal
@@ -21,22 +30,34 @@ import { Footer } from "../components/Footer";
 import { InputField } from "../components/InputField";
 import { getSampleUri, getExplorerUrl, donate } from "../utils";
 
+interface FormValues {
+  name: string;
+  admin: string;
+  asset: string;
+  symbol: string;
+  baseUri: string;
+  royaltyRecipient: string;
+  royaltyRate?: number;
+  supply?: number;
+  implementationContract?: string;
+}
+
 const Migrate: NextPage = () => {
   const [isMounted, setIsMounted] = useState(false);
+  const [implementationContract, setImplementationContract] = useState<Address | null>(null);
+  const [createdContract, setCreatedContract] = useState<Address | null>(null);
+  
+  const { address, chain } = useAccount();
+  const config = useConfig();
 
-  const [implementationContract, setImplementationContract] = useState(null);
-  const [createdContract, setCreatedContract] = useState(null);
-  const { chain } = useNetwork();
-  const { address } = useAccount();
-
-  const onChangeImplContract = (e) => {
-    const value = e.target.value;
+  const onChangeImplContract = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value as Address;
     setImplementationContract(value);
     setCreatedContract(null);
   };
 
-  const validateInputs = (values) => {
-    const errors = {};
+  const validateInputs = (values: FormValues) => {
+    const errors: Partial<FormValues> = {};
 
     if (!values?.name) {
       errors.name = "Name is required";
@@ -65,9 +86,9 @@ const Migrate: NextPage = () => {
     return errors;
   };
 
-  const submitDeployment = async (values, actions) => {
-    let toastId;
-
+  const submitDeployment = async (values: FormValues, actions: any) => {
+    let toastId: string | number;
+    
     try {
       toastId = toast("Check wallet for transaction...", {
         autoClose: false,
@@ -105,7 +126,7 @@ const Migrate: NextPage = () => {
         autoClose: false,
       });
 
-      const data = await waitForTransaction({
+      const data = await waitForTransactionReceipt({
         hash,
       });
 
@@ -127,40 +148,71 @@ const Migrate: NextPage = () => {
       if (toastId) {
         toast.update(toastId, {
           type: toast.TYPE.ERROR,
-          render: e.message,
+          render: e instanceof Error ? e.message : "Unknown error occurred",
           autoClose: false,
         });
-      }
-      else {
-        toast.error("Error attempting to migrate contract!");
       }
     }
   };
 
-  const { data, isLoading } = useContractReads({
+  const fetchContractData = async () => {
+    if (!implementationContract) return;
+    
+    const data = await readContracts(config, {
+      contracts: [
+        {
+          address: implementationContract,
+          abi: erc721Abi,
+          functionName: "name",
+        },
+        {
+          address: implementationContract,
+          abi: erc721Abi,
+          functionName: "symbol",
+        },
+        {
+          address: implementationContract,
+          abi: erc721Abi,
+          functionName: "totalSupply",
+        },
+        {
+          address: implementationContract,
+          abi: erc721Abi,
+          functionName: "tokenURI",
+          args: [1n],
+        },
+      ],
+    });
+    return data;
+  };
+
+  const { data, isLoading } = useReadContracts({
     contracts: [
       {
-        address: implementationContract,
-        abi: erc721ABI,
+        address: implementationContract!,
+        abi: erc721Abi,
         functionName: "name",
       },
       {
-        address: implementationContract,
-        abi: erc721ABI,
+        address: implementationContract!,
+        abi: erc721Abi,
         functionName: "symbol",
       },
       {
-        address: implementationContract,
-        abi: erc721ABI,
+        address: implementationContract!,
+        abi: erc721Abi,
         functionName: "totalSupply",
       },
       {
-        address: implementationContract,
-        abi: erc721ABI,
+        address: implementationContract!,
+        abi: erc721Abi,
         functionName: "tokenURI",
-        args: [1],
+        args: [1n],
       },
     ],
+    query: {
+      enabled: !!implementationContract,
+    },
   });
 
   const [name, symbol, totalSupply, tokenUri] = data || [];
