@@ -1,4 +1,5 @@
-// Styles
+'use client';
+
 import styles from "../styles/Migrate.module.css";
 
 // External
