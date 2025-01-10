@@ -6,7 +6,7 @@ import "@rainbow-me/rainbowkit/styles.css";
 // External
 import {
   RainbowKitProvider,
-  getDefaultWallets,
+  getDefaultConfig,
 } from "@rainbow-me/rainbowkit";
 import type { AppProps } from "next/app";
 import {
@@ -17,21 +17,16 @@ import {
   sepolia,
   apeChain,
 } from "viem/chains";
+import { http } from "viem";
 import { WagmiProvider } from "wagmi";
-import { createConfig, http } from "@wagmi/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { injected, walletConnect } from "@wagmi/connectors";
 
 // Internal
 import { appName, projectId } from "../utils";
 
-const { wallets } = getDefaultWallets({
+const config = getDefaultConfig({
   appName,
   projectId,
-  chains: [mainnet, polygon, optimism, apeChain],
-});
-
-const config = createConfig({
   chains: [
     mainnet,
     polygon,
@@ -40,10 +35,6 @@ const config = createConfig({
     ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true"
       ? [goerli, sepolia]
       : []),
-  ],
-  connectors: [
-    injected(),
-    walletConnect({ projectId }),
   ],
   transports: {
     [mainnet.id]: http(),
@@ -61,7 +52,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
+        <RainbowKitProvider modalSize="compact">
           <Component {...pageProps} />
         </RainbowKitProvider>
       </QueryClientProvider>
