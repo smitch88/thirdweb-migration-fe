@@ -1,4 +1,5 @@
-// Styles
+'use client';
+
 import styles from "../styles/Migrate.module.css";
 
 // External
@@ -8,10 +9,19 @@ import Head from "next/head";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { Field, Form, Formik, FormikProps, ErrorMessage } from "formik";
-import { erc721ABI, useAccount, useNetwork, useContractReads } from "wagmi";
-import { prepareWriteContract, sendTransaction, waitForTransaction, writeContract } from "@wagmi/core";
+import { 
+  useAccount,
+  useConfig,
+  useReadContracts,
+  type Address,
+} from "wagmi";
+import { 
+  prepareWriteContract, 
+  writeContract,
+  waitForTransactionReceipt 
+} from "@wagmi/core";
 import { ToastContainer, toast } from "react-toastify";
-import { parseEther, encodeFunctionData } from "viem";
+import { parseEther, encodeFunctionData, erc721Abi } from "viem";
 import "react-toastify/dist/ReactToastify.css";
 
 // Internal
@@ -23,11 +33,11 @@ import { getSampleUri, getExplorerUrl, donate } from "../utils";
 
 const Wrap: NextPage = () => {
   const [isMounted, setIsMounted] = useState(false);
-
-  const [implementationContract, setImplementationContract] = useState(null);
-  const [createdContract, setCreatedContract] = useState(null);
-  const { chain } = useNetwork();
-  const { address } = useAccount();
+  const [implementationContract, setImplementationContract] = useState<Address | null>(null);
+  const [createdContract, setCreatedContract] = useState<Address | null>(null);
+  
+  const { address, chain } = useAccount();
+  const config = useConfig();
 
   const onChangeImplContract = (e) => {
     const value = e.target.value;
@@ -94,7 +104,7 @@ const Wrap: NextPage = () => {
         autoClose: false,
       });
 
-      const data = await waitForTransaction({
+      const data = await waitForTransactionReceipt({
         hash,
       });
 
@@ -124,11 +134,11 @@ const Wrap: NextPage = () => {
     }
   };
 
-  const { data, isLoading } = useContractReads({
+  const { data, isLoading } = useReadContracts({
     contracts: [
       {
         address: implementationContract,
-        abi: erc721ABI,
+        abi: erc721Abi,
         functionName: "tokenURI",
         args: [1],
       },
