@@ -1,4 +1,4 @@
-import { goerli, sepolia, mainnet, polygon, optimism } from "wagmi/chains";
+import { goerli, sepolia, mainnet, polygon, optimism, apeChain } from "wagmi/chains";
 
 export const factoryContract = {
   address: "0x064F8943f61Db9c8c870E9b05f6e32042a427ad7",
@@ -458,6 +458,9 @@ export const migrated721Contract = {
   [optimism.id]: {
     address: "0xF1736E762F7f58D518693E1CdE5111Bbf626dDb3",
   },
+  [apeChain.id]: {
+    address: "0x8888596f6c3a142a11e408610f2f4560905f3065",
+  },
 };
 
 export const wrapped721Contract = {
@@ -480,4 +483,8 @@ export const wrapped721Contract = {
   [optimism.id]: {
     address: "0x9978179a9EE76f6C7ff8BCC1FC8Fb13DF1595f36",
   },
+  [apeChain.id]: {
+    address: "0x9978179a9EE76f6C7ff8BCC1FC8Fb13DF1595f36",
+  },
 };
+

@@ -1,28 +1,26 @@
 'use client';
 
-import styles from "../styles/Migrate.module.css";
-
 // External
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import type { NextPage } from "next";
 import Head from "next/head";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
-import { Field, Form, Formik, FormikProps, ErrorMessage } from "formik";
+import { Field, Form, Formik, FormikProps } from "formik";
 import { 
   useAccount,
   useConfig,
   useReadContracts,
-  type Address,
+  useWriteContract,
+  usePublicClient,
 } from "wagmi";
 import { 
-  prepareWriteContract, 
-  writeContract,
-  waitForTransactionReceipt 
-} from "@wagmi/core";
+  type Address,
+  encodeFunctionData,
+} from "viem";
 import { ToastContainer, toast } from "react-toastify";
-import { parseEther, encodeFunctionData, erc721Abi } from "viem";
+import { erc721Abi } from "viem";
 import "react-toastify/dist/ReactToastify.css";
+import { waitForTransactionReceipt } from "viem/actions";
 
 // Internal
 import { migrated721Contract, factoryContract } from "../lib/contracts";
@@ -43,18 +41,25 @@ interface FormValues {
   implementationContract?: string;
 }
 
+const getImplementationAddress = (chainId?: number) => {
+  if (!chainId || !migrated721Contract[chainId]) return '';
+  return migrated721Contract[chainId].address;
+};
+
 const Migrate: NextPage = () => {
   const [isMounted, setIsMounted] = useState(false);
-  const [implementationContract, setImplementationContract] = useState<Address | null>(null);
-  const [createdContract, setCreatedContract] = useState<Address | null>(null);
+  const [implementationContract, setImplementationContract] = useState<string>('');
+  const [createdContract, setCreatedContract] = useState<string>('');
   
   const { address, chain } = useAccount();
   const config = useConfig();
+  const { writeContract } = useWriteContract();
+  const publicClient = usePublicClient();
 
   const onChangeImplContract = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value as Address;
+    const value = e.target.value;
     setImplementationContract(value);
-    setCreatedContract(null);
+    setCreatedContract('');
   };
 
   const validateInputs = (values: FormValues) => {
@@ -91,47 +96,55 @@ const Migrate: NextPage = () => {
     let toastId: string | number;
     
     try {
+      if (!chain?.id) {
+        throw new Error('No chain selected');
+      }
+
       toastId = toast("Check wallet for transaction...", {
         autoClose: false,
       });
 
-      const deployData = await encodeFunctionData({
+      const deployData = encodeFunctionData({
         abi: migrated721Contract.abi,
         functionName: "initialize",
         args: [
-          values?.admin,
-          values?.asset,
-          values?.royaltyRecipient,
-          (values?.royaltyRate || 0) * 100,
-          values?.supply,
-          values?.name,
-          values?.symbol,
-          values?.baseUri,
+          values.admin as Address,
+          values.asset as Address,
+          values.royaltyRecipient as Address,
+          BigInt((values.royaltyRate || 0) * 100),
+          BigInt(values.supply || 0),
+          values.name,
+          values.symbol,
+          values.baseUri,
         ]
       });
-      const { request } = await prepareWriteContract({
-        ...factoryContract,
+
+      const hash = await writeContract({
+        address: factoryContract.address as Address,
+        abi: factoryContract.abi,
         functionName: "deployClone",
-        enabled: name && symbol,
         args: [
-          values?.implementationContract,
+          migrated721Contract[chain.id].address as Address,
           deployData
         ],
       });
 
-      const { hash } = await writeContract(request);
+      if (!hash) return;
 
       toast.update(toastId, {
         type: toast.TYPE.INFO,
-        render: `Processing tx...${hash?.slice(0, 6)}`,
+        render: `Processing tx...${hash.slice(0, 6)}`,
         autoClose: false,
       });
 
-      const data = await waitForTransactionReceipt({
+      const receipt = await waitForTransactionReceipt(publicClient, {
         hash,
       });
 
-      const { logs } = data || {};
+      const { logs } = receipt;
+      if (!logs?.[0]?.address) {
+        throw new Error('No contract address in transaction logs');
+      }
 
       toast.update(toastId, {
         type: toast.TYPE.SUCCESS,
@@ -140,18 +153,26 @@ const Migrate: NextPage = () => {
       });
 
       actions?.resetForm();
-
-      setImplementationContract(null);
-
-      setCreatedContract(logs?.[0]?.address);
+      setImplementationContract('');
+      setCreatedContract(logs[0].address as Address);
     }
     catch (e) {
+      console.error('Migration error:', e);
+      // Handle user rejection immediately
+      if (e instanceof Error && e.message.includes('User rejected')) {
+        toast.dismiss(toastId);
+        return;
+      }
+      // Add delay for other errors
+      await new Promise(resolve => setTimeout(resolve, 1000));
       if (toastId) {
         toast.update(toastId, {
           type: toast.TYPE.ERROR,
           render: e instanceof Error ? e.message : "Unknown error occurred",
-          autoClose: false,
+          autoClose: 5000,
         });
+      } else {
+        toast.error(e instanceof Error ? e.message : "Unknown error occurred");
       }
     }
   };
@@ -281,8 +302,9 @@ const Migrate: NextPage = () => {
               <h2 className="font-bold mb-1">Old Contract Address</h2>
               <input
                 className="flex flex-row w-full px-4 py-2 border border-[2px]"
-                value={implementationContract}
+                value={implementationContract || ''}
                 onChange={onChangeImplContract}
+                placeholder="Enter contract address"
               />
             </div>
             <div className="flex flex-col w-full max-w-2xl mx-auto">
@@ -315,14 +337,14 @@ const Migrate: NextPage = () => {
               {implementationContract ? (
                 <Formik
                   initialValues={{
-                    implementationContract: migrated721Contract?.[chain?.id]?.address,
-                    admin: address,
+                    implementationContract: getImplementationAddress(chain?.id),
+                    admin: address ?? '',
                     asset: implementationContract,
-                    royaltyRecipient: address,
+                    royaltyRecipient: address ?? '',
                     royaltyRate: 5, // 5%
-                    supply: Number(totalSupply?.result),
-                    name: name?.result,
-                    symbol: symbol?.result,
+                    supply: Number(totalSupply?.result) || 0,
+                    name: name?.result ?? '',
+                    symbol: symbol?.result ?? '',
                     baseUri: "",
                   }}
                   validateOnMount={true}
@@ -440,3 +462,4 @@ const Migrate: NextPage = () => {
 };
 
 export default Migrate;
+
